@@ -3,39 +3,8 @@ import { expect } from "@std/expect";
 import { Hono } from "hono";
 import { RouterCache } from "../../src/core/cache.ts";
 import { cacheMiddleware } from "../../src/adapters/hono.ts";
-import type { CacheEntry, CacheStore } from "../../src/core/types.ts";
-
-/**
- * In-memory CacheStore for testing the Hono adapter.
- */
-class MemoryStore implements CacheStore {
-  readonly data = new Map<string, CacheEntry>();
-
-  async get(key: string): Promise<CacheEntry | null> {
-    return this.data.get(key) ?? null;
-  }
-
-  async set(key: string, entry: CacheEntry, _ttl?: number): Promise<void> {
-    this.data.set(key, entry);
-  }
-
-  async del(key: string): Promise<number> {
-    return this.data.delete(key) ? 1 : 0;
-  }
-
-  async keys(pattern: string): Promise<string[]> {
-    const regex = new RegExp(
-      "^" + pattern.replace(/\*/g, ".*").replace(/\?/g, ".") + "$",
-    );
-    const result: string[] = [];
-    for (const key of this.data.keys()) {
-      if (regex.test(key)) {
-        result.push(key);
-      }
-    }
-    return result;
-  }
-}
+import { MemoryStore } from "../../src/stores/memory.ts";
+import type { CacheStore } from "../../src/core/types.ts";
 
 describe("cacheMiddleware (Hono)", () => {
   let store: MemoryStore;
@@ -68,7 +37,7 @@ describe("cacheMiddleware (Hono)", () => {
     expect(handlerCallCount).toBe(1);
 
     // Verify entry was stored
-    expect(store.data.has("test:/api/users")).toBe(true);
+    expect(await store.get("test:/api/users")).not.toBeNull();
   });
 
   it("returns cached response on second request (HIT)", async () => {
@@ -131,8 +100,8 @@ describe("cacheMiddleware (Hono)", () => {
     );
 
     await app.request("/api/users");
-    expect(store.data.has("test:users-list")).toBe(true);
-    expect(store.data.has("test:/api/users")).toBe(false);
+    expect(await store.get("test:users-list")).not.toBeNull();
+    expect(await store.get("test:/api/users")).toBeNull();
   });
 
   it("does not cache non-200 responses", async () => {
@@ -144,7 +113,7 @@ describe("cacheMiddleware (Hono)", () => {
 
     const res = await app.request("/api/error");
     expect(res.status).toBe(404);
-    expect(store.data.size).toBe(0);
+    expect(store.size).toBe(0);
   });
 
   it("uses custom expire from middleware options", async () => {
@@ -156,8 +125,8 @@ describe("cacheMiddleware (Hono)", () => {
 
     await app.request("/api/data");
 
-    const entry = store.data.get("test:/api/data")!;
-    expect(entry.expire).toBe(60);
+    const entry = await store.get("test:/api/data");
+    expect(entry!.expire).toBe(60);
   });
 
   it("uses cache default expire when no override specified", async () => {
@@ -169,8 +138,8 @@ describe("cacheMiddleware (Hono)", () => {
 
     await app.request("/api/data");
 
-    const entry = store.data.get("test:/api/data")!;
-    expect(entry.expire).toBe(300); // cache default
+    const entry = await store.get("test:/api/data");
+    expect(entry!.expire).toBe(300); // cache default
   });
 
   it("caches text/html responses", async () => {
@@ -186,7 +155,7 @@ describe("cacheMiddleware (Hono)", () => {
     const body = await res.text();
     expect(body).toBe("<h1>Hello</h1>");
 
-    expect(store.data.has("test:/page")).toBe(true);
+    expect(await store.get("test:/page")).not.toBeNull();
   });
 
   it("handles binary mode - caches base64-encoded bodies", async () => {
@@ -206,10 +175,11 @@ describe("cacheMiddleware (Hono)", () => {
     expect(handlerCallCount).toBe(1);
 
     // Verify it was stored as base64
-    const entry = store.data.get("test:/api/image")!;
-    expect(entry.body).toBeTruthy();
+    const entry = await store.get("test:/api/image");
+    expect(entry).not.toBeNull();
+    expect(entry!.body).toBeTruthy();
     // Decode to verify
-    const decoded = Uint8Array.from(atob(entry.body), (ch) => ch.charCodeAt(0));
+    const decoded = Uint8Array.from(atob(entry!.body), (ch) => ch.charCodeAt(0));
     expect(decoded[0]).toBe(0x89);
     expect(decoded[1]).toBe(0x50);
 
@@ -268,7 +238,7 @@ describe("cacheMiddleware (Hono)", () => {
     );
 
     await app.request("/api/data?fast=1");
-    const entry = store.data.get("test:/api/data")!;
-    expect(entry.expire).toBe(10);
+    const entry = await store.get("test:/api/data");
+    expect(entry!.expire).toBe(10);
   });
 });

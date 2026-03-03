@@ -5,6 +5,7 @@
  * adapters, import from the respective subpaths:
  *
  * - `@cahva/router-cache/stores/redis` - Redis/DragonflyDB store
+ * - `@cahva/router-cache/stores/memory` - In-memory store (dev/testing)
  * - `@cahva/router-cache/adapters/hono` - Hono middleware adapter
  *
  * @example

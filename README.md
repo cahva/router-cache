@@ -153,6 +153,27 @@ await client.connect();
 const store = new RedisStore({ client });
 ```
 
+### Memory store (development & testing)
+
+A built-in in-memory store is available for development, testing, and
+prototyping. It supports TTL via lazy eviction - no timers, no external
+dependencies.
+
+> **Not recommended for production.** Entries are not persisted, not shared
+> across processes, and are lost on restart.
+
+```ts
+import { RouterCache } from "@cahva/router-cache";
+import { MemoryStore } from "@cahva/router-cache/stores/memory";
+
+const cache = new RouterCache({
+  store: new MemoryStore(),
+  expire: 60,
+});
+```
+
+The `MemoryStore` also exposes `clear()` and `size` for convenience in tests.
+
 ### Custom store
 
 Implement the `CacheStore` interface to use any storage backend:
@@ -210,6 +231,19 @@ class MemoryStore implements CacheStore {
 | `set(key, entry, ttl?)` | Store as a Redis hash, optionally set TTL. |
 | `del(key)`          | Delete a key.                                  |
 | `keys(pattern)`     | SCAN for keys matching a glob pattern.         |
+
+### `MemoryStore`
+
+In-memory store for development and testing. Not for production use.
+
+| Method / Property   | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `get(key)`          | Retrieve a cache entry (evicts if expired).    |
+| `set(key, entry, ttl?)` | Store an entry, optionally with TTL.      |
+| `del(key)`          | Delete an entry.                               |
+| `keys(pattern)`     | Glob-match keys, filtering out expired entries.|
+| `clear()`           | Remove all entries.                            |
+| `size`              | Number of entries (may include expired).       |
 
 ### `cacheMiddleware(options)`
 
