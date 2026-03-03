@@ -56,8 +56,9 @@ export function cacheMiddleware(options: HonoCacheOptions): MiddlewareHandler {
     : undefined;
 
   return createMiddleware(async (c: Context, next: Next) => {
-    // Determine the cache key: explicit name or the request path
-    const cacheName = name ?? new URL(c.req.url).pathname;
+    // Determine the cache key: explicit name or the request path + search params
+    const url = new URL(c.req.url);
+    const cacheName = name ?? url.pathname + url.search;
 
     try {
       // Check cache
