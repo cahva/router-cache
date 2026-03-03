@@ -238,7 +238,59 @@ describe("cacheMiddleware (Hono)", () => {
     );
 
     await app.request("/api/data?fast=1");
-    const entry = await store.get("test:/api/data");
+    const entry = await store.get("test:/api/data?fast=1");
     expect(entry!.expire).toBe(10);
+  });
+
+  it("caches different search params as separate entries", async () => {
+    app.get(
+      "/api/data",
+      cacheMiddleware({ cache }),
+      (c) => {
+        handlerCallCount++;
+        const url = new URL(c.req.url);
+        const page = url.searchParams.get("page") ?? "1";
+        return c.json({ page });
+      },
+    );
+
+    // First request - page=1
+    const res1 = await app.request("/api/data?page=1");
+    expect(res1.status).toBe(200);
+    expect(await res1.json()).toEqual({ page: "1" });
+    expect(handlerCallCount).toBe(1);
+
+    // Second request - page=2 (different search params = different cache key)
+    const res2 = await app.request("/api/data?page=2");
+    expect(res2.status).toBe(200);
+    expect(await res2.json()).toEqual({ page: "2" });
+    expect(handlerCallCount).toBe(2); // Handler called again
+
+    // Third request - page=1 again (should be cached)
+    const res3 = await app.request("/api/data?page=1");
+    expect(res3.status).toBe(200);
+    expect(await res3.json()).toEqual({ page: "1" });
+    expect(handlerCallCount).toBe(2); // Not called again
+    expect(res3.headers.get("X-Cache")).toBe("HIT");
+  });
+
+  it("treats path with and without search params as separate entries", async () => {
+    app.get(
+      "/api/data",
+      cacheMiddleware({ cache }),
+      (c) => {
+        handlerCallCount++;
+        return c.text("response");
+      },
+    );
+
+    // Request without search params
+    await app.request("/api/data");
+    expect(handlerCallCount).toBe(1);
+
+    // Request with search params - should NOT be a cache hit
+    const res = await app.request("/api/data?foo=bar");
+    expect(handlerCallCount).toBe(2);
+    expect(res.headers.get("X-Cache")).toBe("MISS");
   });
 });

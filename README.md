@@ -251,7 +251,7 @@ In-memory store for development and testing. Not for production use.
 | -------- | ------------- | --------------------------------------------------- |
 | `cache`  | `RouterCache` | Required. The cache instance.                       |
 | `expire` | `ExpireValue` | Override TTL for this route.                        |
-| `name`   | `string`      | Explicit cache key (default: request pathname).     |
+| `name`   | `string`      | Explicit cache key (default: request path + search params). |
 | `binary` | `boolean`     | Base64-encode bodies for binary content.            |
 
 ## Development

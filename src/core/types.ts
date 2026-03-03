@@ -84,7 +84,7 @@ export type ExpireValue =
 export interface MiddlewareOptions {
   /** Override the default expiration for this route. */
   expire?: ExpireValue;
-  /** Explicit cache key name. If not set, the request path is used. */
+  /** Explicit cache key name. If not set, the full request URL path including search params is used. */
   name?: string;
   /** Enable binary mode: bodies are base64-encoded before caching. */
   binary?: boolean;
