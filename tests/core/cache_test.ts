@@ -1,45 +1,10 @@
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { FOREVER, RouterCache } from "../../src/core/cache.ts";
+import { MemoryStore } from "../../src/stores/memory.ts";
 import type {
-  CacheEntry,
   CacheLogger,
-  CacheStore,
 } from "../../src/core/types.ts";
-
-/**
- * In-memory CacheStore implementation for testing.
- * Simulates a real store without needing Redis.
- */
-class MemoryStore implements CacheStore {
-  readonly data = new Map<string, CacheEntry>();
-
-  async get(key: string): Promise<CacheEntry | null> {
-    return this.data.get(key) ?? null;
-  }
-
-  async set(key: string, entry: CacheEntry, _ttl?: number): Promise<void> {
-    this.data.set(key, entry);
-  }
-
-  async del(key: string): Promise<number> {
-    return this.data.delete(key) ? 1 : 0;
-  }
-
-  async keys(pattern: string): Promise<string[]> {
-    // Simple glob matching: only supports trailing * for tests
-    const regex = new RegExp(
-      "^" + pattern.replace(/\*/g, ".*").replace(/\?/g, ".") + "$",
-    );
-    const result: string[] = [];
-    for (const key of this.data.keys()) {
-      if (regex.test(key)) {
-        result.push(key);
-      }
-    }
-    return result;
-  }
-}
 
 describe("RouterCache", () => {
   let store: MemoryStore;
@@ -88,37 +53,37 @@ describe("RouterCache", () => {
         type: "application/json",
       });
 
-      expect(store.data.has("test:/api/users")).toBe(true);
-      const entry = store.data.get("test:/api/users")!;
-      expect(entry.body).toBe('{"users":[]}');
-      expect(entry.type).toBe("application/json");
+      const entry = await store.get("test:/api/users");
+      expect(entry).not.toBeNull();
+      expect(entry!.body).toBe('{"users":[]}');
+      expect(entry!.type).toBe("application/json");
     });
 
     it("defaults content-type to text/html", async () => {
       await cache.add("/page", "<h1>Hello</h1>");
-      const entry = store.data.get("test:/page")!;
-      expect(entry.type).toBe("text/html");
+      const entry = await store.get("test:/page");
+      expect(entry!.type).toBe("text/html");
     });
 
     it("uses default expire when not specified", async () => {
       await cache.add("/page", "body");
-      const entry = store.data.get("test:/page")!;
-      expect(entry.expire).toBe(FOREVER);
+      const entry = await store.get("test:/page");
+      expect(entry!.expire).toBe(FOREVER);
     });
 
     it("uses provided expire override", async () => {
       await cache.add("/page", "body", { expire: 600 });
-      const entry = store.data.get("test:/page")!;
-      expect(entry.expire).toBe(600);
+      const entry = await store.get("test:/page");
+      expect(entry!.expire).toBe(600);
     });
 
     it("sets touched timestamp", async () => {
       const before = Date.now();
       await cache.add("/page", "body");
       const after = Date.now();
-      const entry = store.data.get("test:/page")!;
-      expect(entry.touched).toBeGreaterThanOrEqual(before);
-      expect(entry.touched).toBeLessThanOrEqual(after);
+      const entry = await store.get("test:/page");
+      expect(entry!.touched).toBeGreaterThanOrEqual(before);
+      expect(entry!.touched).toBeLessThanOrEqual(after);
     });
 
     it("logs SET message", async () => {
@@ -221,11 +186,11 @@ describe("RouterCache", () => {
   describe("del", () => {
     it("deletes an entry by exact name", async () => {
       await cache.add("/api/users", "users");
-      expect(store.data.size).toBe(1);
+      expect(store.size).toBe(1);
 
       const count = await cache.del("/api/users");
       expect(count).toBe(1);
-      expect(store.data.size).toBe(0);
+      expect(store.size).toBe(0);
     });
 
     it("returns 0 when key does not exist", async () => {
@@ -240,8 +205,8 @@ describe("RouterCache", () => {
 
       const count = await cache.del("/api/users/*");
       expect(count).toBe(2);
-      expect(store.data.size).toBe(1);
-      expect(store.data.has("test:/api/posts/1")).toBe(true);
+      expect(store.size).toBe(1);
+      expect(await store.get("test:/api/posts/1")).not.toBeNull();
     });
 
     it("deletes all entries with *", async () => {
@@ -251,7 +216,7 @@ describe("RouterCache", () => {
 
       const count = await cache.del("*");
       expect(count).toBe(3);
-      expect(store.data.size).toBe(0);
+      expect(store.size).toBe(0);
     });
 
     it("returns 0 when wildcard matches nothing", async () => {
