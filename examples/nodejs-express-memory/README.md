@@ -1,14 +1,14 @@
-# Custom Express Adapter Example
+# nodejs-express-memory
 
-This example shows how to build a custom caching middleware for Express using
-`@cahva/router-cache`. Since `router-cache` ships a built-in Hono adapter but
-not an Express one, this demonstrates how to write your own adapter for any
-framework.
+Express 5 + in-memory store example for Node.js.
+
+This example shows how to build a caching middleware for Express using
+`@cahva/router-cache`.
 
 ## Project structure
 
 ```
-custom-express/
+nodejs-express-memory/
 ├── index.js              # Express app with cached routes
 ├── lib/
 │   ├── cache.js          # Central cache instance + pre-bound "cached" helper

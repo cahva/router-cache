@@ -7,7 +7,8 @@ adapters. Bring your own Redis client, use any framework.
 
 ## Features
 
-- **Framework-agnostic** - ships with a Hono adapter, more can be added
+- **Framework-agnostic** - works with any framework; includes example adapters
+  for Hono and Express
 - **Store-agnostic** - ships with a Redis store, supports any backend via the
   `CacheStore` interface
 - **Bring your own client** - works with both
@@ -34,10 +35,8 @@ npx jsr add @cahva/router-cache
 ## Quick start
 
 ```ts
-import { Hono } from "hono";
 import { RouterCache } from "@cahva/router-cache";
 import { RedisStore } from "@cahva/router-cache/stores/redis";
-import { cacheMiddleware } from "@cahva/router-cache/adapters/hono";
 import Redis from "ioredis";
 
 // Create a Redis-backed cache
@@ -47,15 +46,22 @@ const cache = new RouterCache({
   expire: 3600, // default TTL: 1 hour
 });
 
-const app = new Hono();
-
-// Cache this route for 10 minutes
-app.get("/api/users", cacheMiddleware({ cache, expire: 600 }), (c) => {
-  return c.json({ users: ["alice", "bob"] });
+// Store a response
+await cache.add("/api/users", '{"users":["alice","bob"]}', {
+  type: "application/json",
+  expire: 600, // 10 minutes
 });
 
-export default app;
+// Retrieve it
+const entries = await cache.get("/api/users");
+
+// Delete with wildcards
+await cache.del("/api/*");
 ```
+
+For framework-specific middleware examples (Hono, Express), see the
+[examples](https://github.com/cahva/router-cache/tree/main/examples)
+directory.
 
 ## Usage
 
@@ -76,38 +82,42 @@ const cache = new RouterCache({
 });
 ```
 
-### Hono middleware
+### Framework adapters
+
+The library doesn't ship framework-specific middleware — instead, you write
+a thin adapter for your framework. The core exports `normalizeExpire()` and
+the `MiddlewareOptions` type to make this straightforward.
+
+A recommended pattern is to create a **centralized `cached()` helper** that
+binds the cache instance once, so route files stay clean:
 
 ```ts
-import { cacheMiddleware } from "@cahva/router-cache/adapters/hono";
+// lib/cache.ts
+import { RouterCache } from "@cahva/router-cache";
+import { RedisStore } from "@cahva/router-cache/stores/redis";
+import { cacheMiddleware } from "./cache-middleware.ts";
 
-// Basic usage - caches using the request path as the key
-app.get("/api/data", cacheMiddleware({ cache }), handler);
+const cache = new RouterCache({
+  store: new RedisStore({ client: redis }),
+  prefix: "myapp:",
+  expire: 3600,
+});
 
-// Custom TTL
-app.get("/api/data", cacheMiddleware({ cache, expire: 60 }), handler);
+export function cached(options = {}) {
+  return cacheMiddleware({ cache, ...options });
+}
 
-// Explicit cache key
-app.get("/api/data", cacheMiddleware({ cache, name: "my-data" }), handler);
+// routes.ts — no cache setup needed
+import { cached } from "./lib/cache.ts";
 
-// Dynamic TTL based on request
-app.get(
-  "/api/data",
-  cacheMiddleware({
-    cache,
-    expire: (req) => {
-      return new URL(req.url).searchParams.has("realtime") ? 5 : 600;
-    },
-  }),
-  handler,
-);
-
-// Binary mode for images/files
-app.get("/api/image", cacheMiddleware({ cache, binary: true }), handler);
+app.get("/api/data", cached(), handler);
+app.get("/api/data", cached({ expire: 60 }), handler);
+app.get("/api/data", cached({ expire: (req) => ... }), handler);
 ```
 
-The middleware sets an `X-Cache` response header: `HIT` when served from cache,
-`MISS` on first request.
+Complete adapter implementations for Hono and Express are available in the
+[examples](https://github.com/cahva/router-cache/tree/main/examples)
+directory.
 
 ### Direct cache operations
 
@@ -245,11 +255,12 @@ In-memory store for development and testing. Not for production use.
 | `clear()`           | Remove all entries.                            |
 | `size`              | Number of entries (may include expired).       |
 
-### `cacheMiddleware(options)`
+### `MiddlewareOptions`
+
+Common options for framework middleware adapters:
 
 | Option   | Type          | Description                                         |
 | -------- | ------------- | --------------------------------------------------- |
-| `cache`  | `RouterCache` | Required. The cache instance.                       |
 | `expire` | `ExpireValue` | Override TTL for this route.                        |
 | `name`   | `string`      | Explicit cache key (default: request path + search params). |
 | `binary` | `boolean`     | Base64-encode bodies for binary content.            |
@@ -259,13 +270,10 @@ In-memory store for development and testing. Not for production use.
 Runnable examples are available in the
 [examples](https://github.com/cahva/router-cache/tree/main/examples) directory:
 
-- **[custom-express](https://github.com/cahva/router-cache/tree/main/examples/custom-express)** -
-  Custom Express 5 adapter with a centralized `cached()` helper pattern, using
-  the in-memory store
-- **[deno-hono-redis.ts](https://github.com/cahva/router-cache/blob/main/examples/deno-hono-redis.ts)** -
-  Hono + Redis on Deno (single file)
-- **[nodejs-hono-redis.js](https://github.com/cahva/router-cache/blob/main/examples/nodejs-hono-redis.js)** -
-  Hono + Redis on Node.js (single file)
+- **[deno-hono-redis](https://github.com/cahva/router-cache/tree/main/examples/deno-hono-redis)** -
+  Hono + Redis on Deno
+- **[nodejs-express-memory](https://github.com/cahva/router-cache/tree/main/examples/nodejs-express-memory)** -
+  Express 5 + in-memory store on Node.js
 
 ## Development
 
@@ -274,7 +282,7 @@ Runnable examples are available in the
 deno test --allow-net --allow-read
 
 # Type check
-deno check mod.ts src/stores/redis.ts src/adapters/hono.ts
+deno check mod.ts src/stores/redis.ts src/stores/memory.ts
 ```
 
 ## Acknowledgements
