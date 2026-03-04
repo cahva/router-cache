@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start": "deno serve main.ts"
+    "start": "deno serve --allow-env --allow-net --allow-read main.ts"
   },
   "imports": {
     "@cahva/router-cache": "jsr:@cahva/router-cache@^0.2.0",
