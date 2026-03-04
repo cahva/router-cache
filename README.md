@@ -254,6 +254,19 @@ In-memory store for development and testing. Not for production use.
 | `name`   | `string`      | Explicit cache key (default: request path + search params). |
 | `binary` | `boolean`     | Base64-encode bodies for binary content.            |
 
+## Examples
+
+Runnable examples are available in the
+[examples](https://github.com/cahva/router-cache/tree/main/examples) directory:
+
+- **[custom-express](https://github.com/cahva/router-cache/tree/main/examples/custom-express)** -
+  Custom Express 5 adapter with a centralized `cached()` helper pattern, using
+  the in-memory store
+- **[deno-hono-redis.ts](https://github.com/cahva/router-cache/blob/main/examples/deno-hono-redis.ts)** -
+  Hono + Redis on Deno (single file)
+- **[nodejs-hono-redis.js](https://github.com/cahva/router-cache/blob/main/examples/nodejs-hono-redis.js)** -
+  Hono + Redis on Node.js (single file)
+
 ## Development
 
 ```sh
