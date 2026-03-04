@@ -1,0 +1,17 @@
+{
+  "name": "custom-express-router-cache-example",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cahva/router-cache": "npm:@jsr/cahva__router-cache@^0.2.0",
+    "express": "^5.2.1"
+  }
+}
