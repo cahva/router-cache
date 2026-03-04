@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "start": "deno serve main.ts"
+  },
+  "imports": {
+    "@cahva/router-cache": "jsr:@cahva/router-cache@^0.2.0",
+    "@cahva/router-cache/stores/redis": "jsr:@cahva/router-cache@^0.2.0/stores/redis",
+    "hono": "jsr:@hono/hono@^4",
+    "ioredis": "npm:ioredis@^5"
+  }
+}
