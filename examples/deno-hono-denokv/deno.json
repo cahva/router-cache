@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "start": "deno serve --allow-env --allow-net --allow-read --allow-write --unstable-kv main.ts"
+  },
+  "imports": {
+    "@cahva/router-cache": "jsr:@cahva/router-cache@^0.4.0",
+    "@cahva/router-cache/stores/denokv": "jsr:@cahva/router-cache@^0.4.0/stores/denokv",
+    "hono": "jsr:@hono/hono@^4"
+  }
+}

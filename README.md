@@ -9,8 +9,8 @@ adapters. Bring your own Redis client, use any framework.
 
 - **Framework-agnostic** - works with any framework; includes example adapters
   for Hono, Express, Fastify, etc.
-- **Store-agnostic** - ships with a Redis store, supports any backend via the
-  `CacheStore` interface
+- **Store-agnostic** - ships with Redis, Deno KV, and in-memory stores;
+  supports any backend via the `CacheStore` interface
 - **Bring your own client** - works with both
   [ioredis](https://github.com/redis/ioredis) and
   [redis](https://github.com/redis/node-redis) (v4+)
@@ -184,6 +184,28 @@ const cache = new RouterCache({
 
 The `MemoryStore` also exposes `clear()` and `size` for convenience in tests.
 
+### Deno KV store
+
+A Deno KV store is available for Deno projects. It uses Deno's built-in
+key-value database — zero external dependencies, no separate server required.
+
+Data is persisted locally (SQLite-backed) by default, or can run in-memory
+with `Deno.openKv(":memory:")`.
+
+```ts
+import { RouterCache } from "@cahva/router-cache";
+import { DenoKvStore } from "@cahva/router-cache/stores/denokv";
+
+const kv = await Deno.openKv();
+const cache = new RouterCache({
+  store: new DenoKvStore({ kv }),
+  expire: 60,
+});
+```
+
+The `DenoKvStore` also exposes `close()` to release the underlying KV
+connection when done.
+
 ### Custom store
 
 Implement the `CacheStore` interface to use any storage backend:
@@ -255,6 +277,18 @@ In-memory store for development and testing. Not for production use.
 | `clear()`           | Remove all entries.                            |
 | `size`              | Number of entries (may include expired).       |
 
+### `DenoKvStore`
+
+Deno KV store using Deno's built-in key-value database.
+
+| Method / Property       | Description                                    |
+| ----------------------- | ---------------------------------------------- |
+| `get(key)`              | Retrieve a cache entry.                        |
+| `set(key, entry, ttl?)` | Store an entry, optionally with TTL.           |
+| `del(key)`              | Delete an entry.                               |
+| `keys(pattern)`         | Glob-match keys via prefix scan + filtering.   |
+| `close()`               | Close the underlying Deno KV connection.       |
+
 ### `MiddlewareOptions`
 
 Common options for framework middleware adapters:
@@ -272,6 +306,8 @@ Runnable examples are available in the
 
 - **[deno-hono-redis](https://github.com/cahva/router-cache/tree/main/examples/deno-hono-redis)** -
   Hono + Redis on Deno
+- **[deno-hono-denokv](https://github.com/cahva/router-cache/tree/main/examples/deno-hono-denokv)** -
+  Hono + Deno KV on Deno
 - **[nodejs-express-memory](https://github.com/cahva/router-cache/tree/main/examples/nodejs-express-memory)** -
   Express 5 + in-memory store on Node.js
 - **[nodejs-fastify-memory](https://github.com/cahva/router-cache/tree/main/examples/nodejs-fastify-memory)** -
@@ -284,7 +320,7 @@ Runnable examples are available in the
 deno test --allow-net --allow-read
 
 # Type check
-deno check mod.ts src/stores/redis.ts src/stores/memory.ts
+deno check mod.ts src/stores/redis.ts src/stores/memory.ts src/stores/denokv.ts
 ```
 
 ## Acknowledgements
