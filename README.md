@@ -11,9 +11,10 @@ adapters. Bring your own Redis client, use any framework.
   for Hono, Express, Fastify, etc.
 - **Store-agnostic** - ships with Redis, Deno KV, and in-memory stores;
   supports any backend via the `CacheStore` interface
-- **Bring your own client** - works with both
-  [ioredis](https://github.com/redis/ioredis) and
-  [redis](https://github.com/redis/node-redis) (v4+)
+- **Bring your own client** - you provide the backing client: a Redis instance
+  ([ioredis](https://github.com/redis/ioredis),
+  [node-redis](https://github.com/redis/node-redis), or compatible), a
+  `Deno.Kv` handle, or any custom `CacheStore` implementation
 - **Wildcard operations** - get/delete cache entries using glob patterns
   (e.g. `/api/users/*`)
 - **Binary mode** - cache binary responses (images, PDFs) via base64 encoding
@@ -148,8 +149,9 @@ await cache.del("*");
 
 ### Redis client compatibility
 
-The `RedisClient` interface is minimal enough to work with both popular Redis
-client libraries without any adapters:
+The `RedisClient` interface is minimal enough to work with popular Redis
+client libraries — and Redis-compatible databases like
+[DragonflyDB](https://www.dragonflydb.io/) — without any adapters:
 
 ```ts
 // ioredis
