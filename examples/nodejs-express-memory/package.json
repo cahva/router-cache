@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cahva/router-cache": "npm:@jsr/cahva__router-cache@^0.2.0",
+    "@cahva/router-cache": "npm:@jsr/cahva__router-cache@^0.3.0",
     "express": "^5.2.1"
   }
 }
