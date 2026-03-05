@@ -274,6 +274,8 @@ Runnable examples are available in the
   Hono + Redis on Deno
 - **[nodejs-express-memory](https://github.com/cahva/router-cache/tree/main/examples/nodejs-express-memory)** -
   Express 5 + in-memory store on Node.js
+- **[nodejs-fastify-memory](https://github.com/cahva/router-cache/tree/main/examples/nodejs-fastify-memory)** -
+  Fastify 5 + in-memory store on Node.js
 
 ## Development
 
