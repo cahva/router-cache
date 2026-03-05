@@ -8,7 +8,7 @@ adapters. Bring your own Redis client, use any framework.
 ## Features
 
 - **Framework-agnostic** - works with any framework; includes example adapters
-  for Hono and Express
+  for Hono, Express, Fastify, etc.
 - **Store-agnostic** - ships with a Redis store, supports any backend via the
   `CacheStore` interface
 - **Bring your own client** - works with both
@@ -59,7 +59,7 @@ const entries = await cache.get("/api/users");
 await cache.del("/api/*");
 ```
 
-For framework-specific middleware examples (Hono, Express), see the
+For framework-specific middleware examples (Hono, Express, Fastify, etc.), see the
 [examples](https://github.com/cahva/router-cache/tree/main/examples)
 directory.
 
@@ -115,7 +115,7 @@ app.get("/api/data", cached({ expire: 60 }), handler);
 app.get("/api/data", cached({ expire: (req) => ... }), handler);
 ```
 
-Complete adapter implementations for Hono and Express are available in the
+Complete adapter implementations for Hono, Express, Fastify, etc. are available in the
 [examples](https://github.com/cahva/router-cache/tree/main/examples)
 directory.
 
