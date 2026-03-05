@@ -6,6 +6,7 @@
  *
  * - `@cahva/router-cache/stores/redis` - Redis/DragonflyDB store
  * - `@cahva/router-cache/stores/memory` - In-memory store (dev/testing)
+ * - `@cahva/router-cache/stores/denokv` - Deno KV store (zero-dependency)
  *
  * For framework adapter examples (Hono, Express, etc.), see the
  * [examples](https://github.com/cahva/router-cache/tree/main/examples)
