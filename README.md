@@ -289,11 +289,15 @@ deno check mod.ts src/stores/redis.ts src/stores/memory.ts
 
 This package is inspired by
 [express-redis-cache](https://www.npmjs.com/package/express-redis-cache), a
-cache middleware for Express.js with Redis. The core caching concepts - storing
-responses as Redis hashes, wildcard key operations via SCAN, and expiration
-policies - originate from that project. `@cahva/router-cache` is a
-ground-up rewrite in TypeScript with a framework-agnostic, store-agnostic
-architecture.
+cache middleware for Express.js with Redis (no longer maintained). The core
+caching concept of storing responses as Redis hashes originates from that
+project. This project was started because the original library stopped working
+in Node.js v24.
+
+`@cahva/router-cache` is a ground-up rewrite in TypeScript with a
+framework-agnostic, store-agnostic architecture. It also improves on the
+original by using Redis `SCAN` for wildcard key operations instead of the
+blocking `KEYS` command.
 
 ## License
 
