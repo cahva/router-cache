@@ -1,5 +1,5 @@
 {
-  "name": "custom-express-router-cache-example",
+  "name": "custom-fastify-router-cache-example",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -12,6 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "@cahva/router-cache": "npm:@jsr/cahva__router-cache@^0.3.0",
-    "express": "^5.2.1"
+    "fastify": "^5"
   }
 }

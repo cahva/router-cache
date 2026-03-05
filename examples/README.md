@@ -11,3 +11,4 @@ pre-bound middleware.
 |---------|---------|-----------|-------|
 | [deno-hono-redis/](./deno-hono-redis/) | Deno | Hono | Redis |
 | [nodejs-express-memory/](./nodejs-express-memory/) | Node.js | Express 5 | Memory |
+| [nodejs-fastify-memory/](./nodejs-fastify-memory/) | Node.js | Fastify 5 | Memory |
